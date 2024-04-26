@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <script src="bootstrap/js/jquery-2.1.1.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/vue.global.js"></script>
+    <style>
+        body {
+            background-image: url("img/bg.png");
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .form-div {
+            margin-top: 20%;
+            background-color: #fffa;
+            padding: 16px;
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="app">
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6 form-div">
+                <h1 style="text-align: center;">手机维修管理系统</h1>
+                <hr>
+                <form>
+                    <div class="form-group">
+                        <label for="admin_name">账号</label>
+                        <input type="text" class="form-control input-lg" placeholder="请输入账号" id="admin_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin_pwd">密码</label>
+                        <input type="password" class="form-control input-lg" placeholder="请输入密码" id="admin_pwd">
+                    </div>
+                    <span style="color: red; font-weight: bold;">{{msg}}</span>
+                    <button type="button" class="btn btn-primary btn-block btn-lg" @click="login()">{{btn}}</button>
+                </form>
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+    </div>
+</body>
+
+<script>
+    const { createApp } = Vue;
+    createApp({
+        data() {
+            return {
+                msg: "",
+                btn: "登录"
+            }
+        },
+        mounted() { },
+        methods: {
+            login: async function () {
+                this.btn = "登录中……";
+                const that = this;
+                const admin_name = $("#admin_name").val();
+                const admin_pwd = $("#admin_pwd").val();
+                await $.post( // 等待该条语句执行完毕再进行下一句
+                    base_url + "AccountServlet",
+                    {
+                        "ac": "check",
+                        "admin_name": admin_name,
+                        "admin_pwd": admin_pwd
+                    },
+                    data => {
+                        if (data.code == "1") {
+                            localStorage.setItem("admin_name", data.data.admin_name);
+                            localStorage.setItem("token", data.data.token);
+                            localStorage.setItem("role", data.data.role); // 角色
+                            location.href = "manager.html";
+                        } else {
+                            that.msg = data.msg;
+                        }
+                    }
+                );
+                this.btn = "登录";
+            }
+        }
+    }).mount("#app");
+</script>
+
+</html>

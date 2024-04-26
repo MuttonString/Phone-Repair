@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机维修查询</title>
+    <meta name="viewport" content="width=device-width,inital-scale=1">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <script src="bootstrap/js/jquery-2.1.1.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/vue.global.js"></script>
+    <style>
+        input {
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: blue;
+        }
+
+        td {
+            text-align: center;
+        }
+
+        .title {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="row"><img src="img/m.jpg" width="100%"></div>
+    <div class="container-fluid" id="app">
+        <div class="row" style="margin: 10px 5px;"><input type="text" v-model="task.cus_phone" class="form-control"
+                id="cus_phone" placeholder="请输入任务编号或手机号码"><button class="btn btn-primary btn-lg btn-block"
+                @click="checkTask(task.cus_phone)" style="margin-top: 5px;">查询进度</button></div>
+        <div class="row" style="margin: 10px 5px;">
+            <table class="table table-bordered" v-for="task in task_list">
+                <tr>
+                    <td>业务编号</td>
+                    <td>{{task.task_no}}</td>
+                </tr>
+                <tr>
+                    <td>客户姓名</td>
+                    <td>{{task.cus_name}}</td>
+                </tr>
+                <tr>
+                    <td>维修项目</td>
+                    <td>{{task.service_item}}</td>
+                </tr>
+                <tr>
+                    <td>维修状态</td>
+                    <td>{{task.task_state==0?"录单完成": (task.task_state==1?"维修中":"请前往手机店取机")}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+<script src="js/mobile.js"></script>
+
+</html>

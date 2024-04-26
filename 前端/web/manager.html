@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机维修管理</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <script src="bootstrap/js/jquery-2.1.1.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/vue.global.js"></script>
+    <script src="js/check.js"></script>
+    <style>
+        img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        body {
+            margin: auto 0;
+        }
+
+        .table th,
+        .table td {
+            text-align: center;
+        }
+
+        button {
+            margin: auto 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <!-- 头 -->
+        <img src="img/head.jpg">
+    </div>
+    <div class="row" style="margin-top: 10px;" id="app">
+        <!-- start左边菜单项 -->
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">手机维修点服务系统<span id="info"></span></div>
+                <ul class="list-group">
+                    <!-- 根据角色决定显示哪些超链接 0.管理员 1.前台接待 2.维修人员 3.检测人员 -->
+                    <a href="javascript:void(0)" @click="show_panel(0)" class="list-group-item"
+                        v-if="role == 0 || role == 1">前台接待</a>
+                    <a href="javascript:void(0)" @click="show_panel(1)" class="list-group-item"
+                        v-if="role == 0 || role == 2 || role == 3">维修管理</a>
+                    <a href="javascript:void(0)" @click="show_panel(2)" class="list-group-item"
+                        v-if="role == 0">配件管理</a>
+                    <a href="javascript:void(0)" @click="show_panel(3)" class="list-group-item"
+                        v-if="role == 0">账号管理</a>
+                    <a href="javascript:void(0)" @click="show_panel(4)" class="list-group-item"
+                        v-if="role == 0">供应商管理</a>
+                    <a href="javascript:void(0)" @click="logout()" class="list-group-item">退出登录</a>
+                </ul>
+            </div>
+        </div>
+        <!-- end左边菜单项 -->
+
+        <!-- start右边内容项 -->
+        <div class="col-md-9">
+
+            <!-- 前台接待start -->
+            <div class="panel panel-primary" v-show="cus_view">
+                <div class="panel-heading">前台接待</div>
+                <div class="panel-body">
+                    <p>
+                    <form class="form-inline">
+                        <div class="form-group" style="margin-right: 24px;">
+                            <label for="cus_name">客户姓名：</label>
+                            <input type="text" v-model="task.cus_name" id="cus_name" class="form-control"
+                                placeholder="请输入客户姓名">
+                        </div>
+                        <div class="form-group" style="margin-right: 24px;">
+                            <label for="cus_phone">客户电话：</label>
+                            <input type="text" v-model="task.cus_phone" id="cus_phone" class="form-control"
+                                placeholder="请输入11位手机号码">
+                        </div>
+                        <div class="form-group" style="margin-right: 24px;">
+                            <label for="service_item">维修项目：</label>
+                            <select v-model="task.service_item" class="form-control" id="service_item">
+                                <option>电池</option>
+                                <option>外屏</option>
+                                <option>内屏</option>
+                                <option>摄像头</option>
+                                <option>主板</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-warning" @click="saveTask()">保存维修单</button>
+                    </form>
+                    </p>
+                </div>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>任务编号</th>
+                            <th>客户姓名</th>
+                            <th>客户电话</th>
+                            <th>维修项目</th>
+                            <th>维修状态</th>
+                            <th>录单时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="task in task_list">
+                            <td>{{task.task_no}}</td>
+                            <td>{{task.cus_name}}</td>
+                            <td>{{task.cus_phone}}</td>
+                            <td>{{task.service_item}}</td>
+                            <td>{{task.task_state == 0 ? "录单完成" : (task.task_state == 1 ? "维修中" : "取机")}}</td>
+                            <td>
+                                {{task.task_time.date.year}}年{{task.task_time.date.month}}月{{task.task_time.date.day}}日
+                                &nbsp;&nbsp;
+                                {{task.task_time.time.hour}}时{{task.task_time.time.minute}}分{{task.task_time.time.second}}秒
+                            </td>
+                            <td>
+                                <button class="btn btn-primary btn-danger" v-if="task.task_state == 0"
+                                    @click="delTask(task.task_id, task.task_no)">删除维修单</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 前台接待end -->
+
+            <!-- 维修管理start -->
+            <div class="panel panel-primary" v-show="service_view">
+                <div class="panel-heading">维修管理</div>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>任务编号</th>
+                            <th>客户姓名</th>
+                            <th>客户电话</th>
+                            <th>维修项目</th>
+                            <th>维修状态</th>
+                            <th>录单时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="task in task_list">
+                            <td>{{task.task_no}}</td>
+                            <td>{{task.cus_name}}</td>
+                            <td>{{task.cus_phone}}</td>
+                            <td>{{task.service_item}}</td>
+                            <td>{{task.task_state == 0 ? "录单完成" : (task.task_state == 1 ? "维修中" : "取机")}}</td>
+                            <td>
+                                {{task.task_time.date.year}}年{{task.task_time.date.month}}月{{task.task_time.date.day}}日
+                                &nbsp;&nbsp;
+                                {{task.task_time.time.hour}}时{{task.task_time.time.minute}}分{{task.task_time.time.second}}秒
+                            </td>
+                            <td>
+                                <button class="btn btn-primary btn-success" v-if="task.task_state == 0"
+                                    @click="updateTask(task.task_id, 1, task.service_item)">开始维修</button>
+                                <button class="btn btn-primary btn-warning" v-else-if="task.task_state == 1"
+                                    @click="updateTask(task.task_id, 2, task.service_item)">完成维修</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 维修管理end -->
+
+            <!-- 配件管理start -->
+            <div class="panel panel-primary" v-show="fittings_view">
+                <div class="panel-heading">配件管理</div>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>配件编号</th>
+                            <th>配件名</th>
+                            <th>库存数量</th>
+                            <th>原产地</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="fittings in fittings_list">
+                            <td>{{fittings.fit_no}}</td>
+                            <td>{{fittings.fit_name}}</td>
+                            <td>{{fittings.fit_qty}}</td>
+                            <td>{{fittings.fit_factory}}</td>
+                            <td>
+                                <button class="btn btn-primary btn-success"
+                                    @click="addQty(fittings.fit_id)">增加库存</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 配件管理end -->
+
+            <!-- 账号管理start -->
+            <div class="panel panel-primary" v-show="acc_view">
+                <div class="panel-heading">账号管理</div>
+                <div class="panel-body">
+                    <p>
+                    <form class="form-inline">
+                        <div class="form-group" style="margin-right: 24px;">
+                            <label for="admin_name">用户名：</label>
+                            <input type="text" v-model="admin.admin_name" id="admin_name" class="form-control"
+                                placeholder="请输入用户名">
+                        </div>
+                        <div class="form-group" style="margin-right: 24px;">
+                            <label for="admin_pwd">密码：</label>
+                            <input type="password" v-model="admin.admin_pwd" id="admin_pwd" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin-right: 24px;">
+                            <label for="admin_pwd_">重复密码：</label>
+                            <input type="password" v-model="admin.admin_pwd_" id="admin_pwd_" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin-right: 24px;">
+                            <label for="admin_role">角色：</label>
+                            <select v-model="admin.admin_role" class="form-control" id="admin_role">
+                                <option>管理员</option>
+                                <option>前台接待</option>
+                                <option>维修人员</option>
+                                <option>检测人员</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-warning" @click="regist()">注册账号</button>
+                    </form>
+                    </p>
+                </div>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="acc in acc_list">
+                            <td>{{acc.admin_name}}</td>
+                            <td>{{acc.admin_role == 0 ? '管理员' : (acc.admin_role == 1 ? '前台接待' : (acc.admin_role == 2 ?
+                                '维修人员' : '检测人员'))}}</td>
+                            <td>{{acc.admin_state == 0 ? '正常' : (acc.admin_state == 1 ? '锁定' : '注销')}}</td>
+                            <td>
+                                <button class="btn btn-primary" v-if="acc.admin_state != 2"
+                                    @click="updateAcc(acc.aid, acc.admin_state, acc.admin_pwd, acc.admin_name, true)">更改密码</button>
+                                <button class="btn btn-primary btn-warning" v-if="acc.admin_state == 0"
+                                    @click="updateAcc(acc.aid, 1, acc.admin_pwd, acc.admin_name)">锁定</button>
+                                <button class="btn btn-primary btn-success" v-if="acc.admin_state == 1"
+                                    @click="updateAcc(acc.aid, 0, acc.admin_pwd, acc.admin_name)">解锁</button>
+                                <button class="btn btn-primary btn-danger" v-if="acc.admin_state != 2"
+                                    @click="updateAcc(acc.aid, 2, acc.admin_pwd, acc.admin_name)">注销</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 账号管理end -->
+
+            <!-- 供应商管理start -->
+            <div class="panel panel-primary" v-show="factory_view">
+                <div class="panel-heading">供应商管理</div>
+                <div class="panel-body">
+                    <p>
+                    <form class="form-inline">
+                        <div class="form-group ">
+                            <label for="exampleInputName">供应商：</label>
+                            <input type="text" v-model="factory.fac_name" class="form-control" id="fac_name"
+                                placeholder="请输入供应商名" style="margin-right: 16px;">
+                        </div>
+                        <div class="form-group ">
+                            <label for="exampleInputName2">公司电话：</label>
+                            <input type="text" v-model="factory.fac_phone" class="form-control" id="fac_phone"
+                                placeholder="请输入11位手机号码" style="margin-right: 16px;">
+                        </div>
+                        <div class="form-group ">
+                            <label for="exampleInputName2">提供配件：</label>
+                            <select class="form-control" v-model="factory.fac_item" id="fac_item"
+                                style="margin-right: 16px;">
+                                <option>电池</option>
+                                <option>外屏</option>
+                                <option>内屏</option>
+                                <option>摄像头</option>
+                                <option>主板</option>
+
+                            </select>
+                        </div>
+                        <button type="button" @click="saveFac()" class="btn btn-warning ">保存</button>
+                    </form>
+                    </p>
+                </div>
+
+                <!-- Table -->
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center;">供应商姓名</th>
+                            <th style="text-align: center;">供应商电话</th>
+                            <th style="text-align: center;">提供配件</th>
+                            <th style="text-align: center;">公司状态</th>
+                            <th style="text-align: center;">操作</th>
+                        </tr>
+                    <tbody>
+                        <tr v-for="factory in factory_list">
+                            <!--{{factory.fac_state==0?"合作伙伴":(task.task_state==1?"黑心商家":"公司倒闭")}} v-if="factory.fac_state == 0"-->
+                            <td style="text-align: center;">{{factory.fac_name}}</td>
+                            <td style="text-align: center;">{{factory.fac_phone}}</td>
+                            <td style="text-align: center;">{{factory.fac_item}}</td>
+                            <td style="text-align: center;">
+                                {{factory.fac_state==0?"合作伙伴":(factory.fac_state==1?"黑心商家":"公司倒闭")}}</td>
+                            <td style="text-align: center;">
+                                <button class="btn btn-primary btn-warning" v-if="factory.fac_state == 0"
+                                    @click="updateFac(factory.fac_id, 1)">拉黑</button>
+                                <button class="btn btn-primary btn-success" v-if="factory.fac_state == 1"
+                                    @click="updateFac(factory.fac_id, 0)">解锁</button>
+                                <button class="btn btn-primary btn-danger" v-if="factory.fac_state != 2"
+                                    @click="updateFac(factory.fac_id, 2)">注销</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                    </thead>
+                </table>
+            </div>
+            <!-- 供应商管理end -->
+        </div>
+    </div>
+</body>
+<script src="js/manager.js"></script>
+
+</html>
